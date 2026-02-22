@@ -487,6 +487,7 @@ export default function RenewalPipeline() {
   const [expCId,    setExpCId]   = useState(null);
   const [showAdd,   setShowAdd]  = useState(false);
   const [newAcct,   setNewAcct]  = useState({ name:"",agent:"JB",accountManager:"Gabriella",policyType:"Renewal",lob:"General Liability",masterCompany:"Travelers",policyNumber:"",expirationDate:"",premium:"",stage:"annual_review",notes:"" });
+  const [showDelete, setShowDelete] = useState(false);
   const [showCO,    setShowCO]   = useState(false);
   const [coData,    setCoData]   = useState({ boundCarrier:"",boundPremium:"",notes:"" });
   const [showPB,    setShowPB]   = useState(false);
@@ -588,6 +589,13 @@ export default function RenewalPipeline() {
     } catch(e) { alert("Error adding account: " + e.message); }
     setShowAdd(false);
     setNewAcct({ name:"",agent:"JB",accountManager:"Gabriella",policyType:"Renewal",lob:"General Liability",masterCompany:"Travelers",policyNumber:"",expirationDate:"",premium:"",stage:"annual_review",notes:"" });
+  }
+
+  // ── Delete account ──────────────────────────────────────────────────────────
+  async function deleteAccount(acctId) {
+    try { await sb.delete("accounts", acctId); setAccounts(p => p.filter(x => x.id !== acctId)); }
+    catch(e) { alert("Error deleting account: " + e.message); return; }
+    setShowDelete(false); setView("dashboard"); setSelId(null);
   }
 
   // ── Move to Post-Bind ───────────────────────────────────────────────────────
@@ -862,6 +870,7 @@ export default function RenewalPipeline() {
               <button style={{background:"#0f2a1a",color:"#10b981",border:"1px solid #10b98144",padding:"5px 14px",borderRadius:4,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}
                 onClick={()=>{setCoData({boundCarrier:acct.masterCompany,boundPremium:acct.premium,notes:""});setShowCO(true);}}>✓ Close Out &amp; Archive</button>
             )}
+            <button style={{background:"#1a0a0a",color:"#ef4444",border:"1px solid #ef444433",padding:"5px 14px",borderRadius:4,cursor:"pointer",fontSize:12,fontFamily:"inherit"}} onClick={()=>setShowDelete(true)}>🗑 Delete</button>
           </div>
         </div>
 
@@ -991,6 +1000,20 @@ export default function RenewalPipeline() {
             )}
           </div>
         </div>
+
+        {/* Delete modal */}
+        {showDelete&&(
+          <div style={S.mBg} onClick={e=>e.target===e.currentTarget&&setShowDelete(false)}>
+            <div style={{...S.mBox,width:380}}>
+              <div style={{color:"#ef4444",fontSize:"14px",fontWeight:600,marginBottom:12}}>🗑 Delete Account?</div>
+              <div style={{color:"#64748b",fontSize:"12px",marginBottom:20}}>This will permanently delete <b style={{color:"#e2e8f0"}}>{acct.name}</b> and all its data. This cannot be undone.</div>
+              <div style={S.mActs}>
+                <button style={S.cancelBtn} onClick={()=>setShowDelete(false)}>Cancel</button>
+                <button style={{...S.saveBtn,background:"#1a0a0a",color:"#ef4444",border:"1px solid #ef444433"}} onClick={()=>deleteAccount(acct.id)}>Delete Permanently</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Post-Bind modal */}
         {showPB&&(
