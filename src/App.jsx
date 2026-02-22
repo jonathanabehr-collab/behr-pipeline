@@ -153,10 +153,8 @@ const STAGE_TEMPLATE_KEYS = [
   { key:"post_bind_pc",    label:"Post-Bind — P&C",         color:"#a855f7" },
 ];
 
-const LINES_OF_BUSINESS = ["General Liability","Workers Comp","Commercial Auto","BOP","Umbrella","Professional Liability","Property"];
 const AGENTS            = ["JB","GM","TS","JG","Gerald"];
 const ACCOUNT_MANAGERS  = ["Gabriella","Annie"];
-const MASTER_COMPANIES  = ["Liberty Mutual","Travelers","Hartford","Nationwide","CNA","Markel","Zurich","AmTrust","ICW","Chubb"];
 const POLICY_TYPES      = ["New","Renewal"];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1270,7 +1268,9 @@ export default function RenewalPipeline() {
             {[["Account Name","name","text"],["Policy Number","policyNumber","text"],["Expiration Date","expirationDate","date"],["Annual Premium","premium","number"]].map(([l,k,t])=>(
               <div key={k} style={S.mRow}><label style={S.mLabel}>{l}</label><input type={t} style={S.mInput} value={newAcct[k]} onChange={e=>setNewAcct(p=>({...p,[k]:e.target.value}))}/></div>
             ))}
-            {[["Assigned Agent","agent",AGENTS],["Account Manager","accountManager",ACCOUNT_MANAGERS],["Policy Type","policyType",POLICY_TYPES],["Line of Business","lob",LINES_OF_BUSINESS],["Master Company","masterCompany",MASTER_COMPANIES],["Starting Stage","stage",STAGES.map(s=>s.id)]].map(([l,k,opts])=>(
+            <div style={S.mRow}><label style={S.mLabel}>Line of Business</label><input style={S.mInput} placeholder="e.g. General Liability, Workers Comp" value={newAcct.lob} onChange={e=>setNewAcct(p=>({...p,lob:e.target.value}))}/></div>
+            <div style={S.mRow}><label style={S.mLabel}>Master Company</label><input style={S.mInput} placeholder="e.g. Travelers, Liberty Mutual" value={newAcct.masterCompany} onChange={e=>setNewAcct(p=>({...p,masterCompany:e.target.value}))}/></div>
+            {[["Assigned Agent","agent",AGENTS],["Account Manager","accountManager",ACCOUNT_MANAGERS],["Policy Type","policyType",POLICY_TYPES],["Starting Stage","stage",STAGES.map(s=>s.id)]].map(([l,k,opts])=>(
               <div key={k} style={S.mRow}><label style={S.mLabel}>{l}</label>
                 <select style={S.mSel} value={newAcct[k]} onChange={e=>setNewAcct(p=>({...p,[k]:e.target.value}))}>
                   {opts.map(o=><option key={o} value={o}>{k==="stage"?STAGES.find(s=>s.id===o)?.label:o}</option>)}
