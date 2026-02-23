@@ -658,42 +658,69 @@ export default function RenewalPipeline() {
 
   function parseImportFile(file) {
     setImportFile(file.name);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const XLSX = window.XLSX;
-        if (!XLSX) { setImportErrors([{row:0,name:"Error",msgs:["SheetJS not loaded — please refresh"]}]); return; }
-        const rows = XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result),{type:"array",cellDates:true}).Sheets[XLSX.read(new Uint8Array(e.target.result),{type:"array"}).SheetNames[0]],{defval:""});
-        const parsed=[]; const errors=[];
-        rows.forEach((row,ri) => {
-          const n={};
-          Object.keys(row).forEach(k => { n[k.trim().toLowerCase()] = row[k]; });
-          const name=String(n["account name"]||"").trim(), pNum=String(n["policy number"]||"").trim(),
-                expRaw=n["expiration date"], premRaw=n["annual premium"],
-                lob=String(n["line of business"]||"").trim(), carrier=String(n["master company"]||"").trim(),
-                agent=String(n["assigned agent"]||"").trim(), am=String(n["account manager"]||"").trim(),
-                pt=String(n["policy type"]||"Renewal").trim(),
-                stageRaw=String(n["starting stage"]||"").trim().toLowerCase(),
-                notes=String(n["notes"]||"").trim();
-          const errs=[];
-          if(!name) errs.push("Account Name required");
-          if(!lob)  errs.push("Line of Business required");
-          if(!carrier) errs.push("Master Company required");
-          if(!agent)   errs.push("Assigned Agent required");
-          if(!am)      errs.push("Account Manager required");
-          let expDate="";
-          if(expRaw instanceof Date) expDate=expRaw.toISOString().slice(0,10);
-          else if(expRaw){ const d=new Date(expRaw); if(!isNaN(d)) expDate=d.toISOString().slice(0,10); else errs.push("Bad date format"); }
-          else errs.push("Expiration Date required");
-          const premium=Number(String(premRaw).replace(/[$,]/g,""))||0;
-          if(!premRaw && premRaw!==0) errs.push("Annual Premium required");
-          if(errs.length) errors.push({row:ri+2,name:name||`Row ${ri+2}`,msgs:errs});
-          parsed.push({_rowNum:ri+2,_valid:!errs.length,name,policyNumber:pNum,expirationDate:expDate,premium,lob,masterCompany:carrier,agent,accountManager:am,policyType:pt||"Renewal",stage:STAGE_MAP[stageRaw]||"annual_review",notes});
-        });
-        setImportRows(parsed); setImportErrors(errors);
-      } catch(err) { setImportErrors([{row:0,name:"File Error",msgs:[String(err)]}]); }
-    };
-    reader.readAsArrayBuffer(file);
+    setImportRows([]);
+    setImportErrors([]);
+
+    function processFile() {
+      const XLSX = window.XLSX;
+      if (!XLSX) {
+        setImportErrors([{row:0,name:"Error",msgs:["SheetJS failed to load. Refresh the page and try again."]}]);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const wb = XLSX.read(new Uint8Array(e.target.result), {type:"array", cellDates:true, dateNF:"yyyy-mm-dd"});
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(ws, {defval:"", raw:false});
+          if (!rows.length) {
+            setImportErrors([{row:0,name:"Error",msgs:["No rows found in file."]}]);
+            return;
+          }
+          const parsed=[]; const errors=[];
+          rows.forEach((row,ri) => {
+            const n={};
+            Object.keys(row).forEach(k => { n[k.trim().toLowerCase()] = String(row[k]||"").trim(); });
+            const name=n["account name"]||"", pNum=n["policy number"]||"",
+                  expRaw=n["expiration date"]||"", premRaw=n["annual premium"]||"",
+                  lob=n["line of business"]||"", carrier=n["master company"]||"",
+                  agent=n["assigned agent"]||"", am=n["account manager"]||"",
+                  pt=n["policy type"]||"Renewal",
+                  stageRaw=(n["starting stage"]||"").toLowerCase(),
+                  notes=n["notes"]||"";
+            const errs=[];
+            if(!name) errs.push("Account Name required");
+            if(!agent) errs.push("Assigned Agent required");
+            if(!am) errs.push("Account Manager required");
+            let expDate="";
+            if(expRaw) {
+              const d=new Date(expRaw);
+              if(!isNaN(d.getTime())) expDate=d.toISOString().slice(0,10);
+              else errs.push("Bad date: use MM/DD/YYYY");
+            } else errs.push("Expiration Date required");
+            const premium=Number(String(premRaw).replace(/[$,\s]/g,""))||0;
+            if(errs.length) errors.push({row:ri+2,name:name||`Row ${ri+2}`,msgs:errs});
+            parsed.push({_rowNum:ri+2,_valid:!errs.length,name,policyNumber:pNum,expirationDate:expDate,premium,lob,masterCompany:carrier,agent,accountManager:am,policyType:pt||"Renewal",stage:STAGE_MAP[stageRaw]||"annual_review",notes});
+          });
+          setImportRows(parsed);
+          setImportErrors(errors);
+        } catch(err) {
+          setImportErrors([{row:0,name:"Parse Error",msgs:[String(err)]}]);
+        }
+      };
+      reader.onerror = () => setImportErrors([{row:0,name:"Error",msgs:["Could not read file."]}]);
+      reader.readAsArrayBuffer(file);
+    }
+
+    if (window.XLSX) {
+      processFile();
+    } else {
+      const s = document.createElement("script");
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+      s.onload = processFile;
+      s.onerror = () => setImportErrors([{row:0,name:"Error",msgs:["Could not load SheetJS library."]}]);
+      document.head.appendChild(s);
+    }
   }
 
   async function commitImport() {
