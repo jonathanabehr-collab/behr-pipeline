@@ -1055,6 +1055,7 @@ export default function RenewalPipeline() {
   return (
     <div style={S.app}>
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"/>
       <div style={S.header}>
         <div style={{display:"flex",alignItems:"baseline"}}>
           <span style={S.logo}>BEHR INSURANCE</span>
@@ -1311,7 +1312,6 @@ export default function RenewalPipeline() {
       {/* Import modal */}
       {showImport&&(
         <>
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"/>
           <div style={S.mBg} onClick={e=>e.target===e.currentTarget&&(setShowImport(false),setImportRows([]),setImportErrors([]),setImportFile(null))}>
             <div style={{...S.mBox,width:700,maxHeight:"85vh"}}>
               <div style={S.mTitle}>IMPORT ACCOUNTS FROM EXCEL</div>
