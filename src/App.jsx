@@ -351,8 +351,26 @@ export default function RenewalPipeline() {
             if(!agent) errs.push("Assigned Agent required");
             if(!am)    errs.push("Account Manager required");
             let expDate="";
-            if(expRaw) { const d=new Date(expRaw); if(!isNaN(d.getTime())) expDate=d.toISOString().slice(0,10); else errs.push("Bad date format"); }
-            else errs.push("Expiration Date required");
+            if(expRaw) {
+              // Parse without timezone conversion to avoid day-shift issues
+              const clean = expRaw.toString().trim();
+              // Already YYYY-MM-DD format
+              if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+                expDate = clean;
+              } else {
+                // M/D/YYYY or MM/DD/YYYY — parse parts directly, no Date constructor
+                const parts = clean.split("/");
+                if (parts.length === 3) {
+                  const [m,d,y] = parts;
+                  expDate = `${y.padStart(4,"0")}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+                } else {
+                  // Fallback: use UTC noon to avoid day shift
+                  const d = new Date(clean + "T12:00:00");
+                  if (!isNaN(d.getTime())) expDate = d.toISOString().slice(0,10);
+                  else errs.push("Bad date format — use MM/DD/YYYY");
+                }
+              }
+            } else errs.push("Expiration Date required");
             const premium=Number(String(premRaw).replace(/[$,\s]/g,""))||0;
             if(errs.length) errors.push({row:ri+2,name:name||`Row ${ri+2}`,msgs:errs});
             parsed.push({_rowNum:ri+2,_valid:!errs.length,name,policyNumber:pNum,expirationDate:expDate,premium,lob,masterCompany:carrier,agent,accountManager:am,policyType:pt||"Renewal",notes});
