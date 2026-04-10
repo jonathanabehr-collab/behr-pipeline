@@ -49,7 +49,7 @@ const MILESTONES = [
 ];
 
 const AGENTS           = ["JB","GM","TS","JG","Gerald"];
-const ACCOUNT_MANAGERS = ["Gabriella","Annie"];
+const ACCOUNT_MANAGERS = ["Gabriella","Mawi"];
 const POLICY_TYPES     = ["New","Renewal"];
 
 function getDaysOut(d) { return Math.ceil((new Date(d) - new Date()) / 86400000); }
