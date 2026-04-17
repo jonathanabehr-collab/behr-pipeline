@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 
 const SUPABASE_URL      = "https://fkrkdkizdgrwvmmnlacz.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrcmtka2l6ZGdyd3ZtbW5sYWN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NzgzNjIsImV4cCI6MjA4NzI1NDM2Mn0.FR0WgL8SykRSgOY2Azk8hg8M5VaCAtvpIr74Uan4FW8";
+const SUPABASE_ANON_KEY = "sb_publishable_c8iiZCtqVZ5bC9rMWByfsQ_qPtHafpS";
 
 const sb = (() => {
   const h = () => ({ "Content-Type":"application/json", apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${SUPABASE_ANON_KEY}` });
